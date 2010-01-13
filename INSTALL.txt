@@ -1,0 +1,43 @@
+RSS Template
+============
+Description: Allow to specify a template wich will process the output for a RSS Item attribute
+Version: 1.0
+Author: Bayron José Guevara
+Nickname: Socrattes
+Email: bayron.guevara@gmail.com
+
+Installation Instructions
+=========================
+1. Execute the following SQL code inside EzPublish database:
+CREATE TABLE `opsarss_export_item_template`
+(
+  `ezrss_export_item_id` Int NOT NULL,
+  `use_template_title` Bool NOT NULL
+  COMMENT 'Determine if the rss export item use custom template',
+  `use_template_description` Bool NOT NULL
+) ENGINE = InnoDB;
+
+ALTER TABLE `opsarss_export_item_template` ADD PRIMARY KEY (`ezrss_export_item_id`);
+
+This will create a table for store the information about whether to use a template for the title and description of a RSS Export Item
+
+2. Active the extension
+[ExtensionSettings]
+ActiveExtensions[]=opsa_rsstemplate
+
+3. Clear all caches
+
+4. Edit 'extension/opsa_rsstemplate/settings/opsa_rss.ini.append.php' and specify the templates to use for each content object attribute
+The templates paths are relative to 'design:opsa_rss/attributes'
+
+Example:
+[RSSExport_1]
+Attributes[folder/description]=folder_description.tpl
+
+5. Create and edit the template listed aboved, each template will have available the == $attribute == variable which represent the current eZContentObjectAttribute object
+
+6. Go to RSS in Admin's Setup Tab and edit the respectively RSS Export. Now a checkbox named 'Use Template' will be available for each attribute.
+
+Feedback
+========
+Any suggestion or bugreports, please send them to bayron.guevara@gmail.com
