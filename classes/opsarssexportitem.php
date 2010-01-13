@@ -97,13 +97,31 @@ class opsaRSSExportItem extends eZRSSExportItem {
 	
 	            $nodeList = eZContentObjectTreeNode::subTreeByNodeID( $params, $rssSource->SourceNodeID );				
                                        
-				$nodesPerRSSItem[] = array( 'RSSItem' => $rssSource->ID,
-											'Nodes' => $nodeList );
+				foreach ( $nodeList as $node ){
+		            $nodesPerRSSItem[] = array( 'RSSItem' => $rssSource->ID,
+												'Node' => $node );
+				}
             }
         }
         else
             $nodesPerRSSItem = null;
+       
+        usort( $nodesPerRSSItem, array( 'opsaRSSExportItem', 'sortRSSItems' ) );
+        $nodesPerRSSItem = array_reverse( $nodesPerRSSItem );
+            
         return $nodesPerRSSItem;
+    }
+    
+    static function sortRSSItems( $first, $second ){
+    	$publishedFirst 	= $first['Node']->attribute('object')->Published;
+    	$publishedSecond 	= $second['Node']->attribute('object')->Published;
+    	
+    	if ( $publishedFirst == $publishedSecond )
+    		return 0;
+    	else if ( $publishedFirst > $publishedSecond )
+    		return 1;
+    	else 
+    		return -1;
     }
     
 	

@@ -1,7 +1,7 @@
 RSS Template
 ============
 Description: Allow to specify a template wich will process the output for a RSS Item attribute
-Version: 1.0
+Version: 1.01
 Author: Bayron José Guevara
 Nickname: Socrattes
 Email: bayron.guevara@gmail.com
@@ -41,3 +41,10 @@ Attributes[folder/description]=folder_description.tpl
 Feedback
 ========
 Any suggestion or bugreports, please send them to bayron.guevara@gmail.com
+
+
+ChangeLog
+=========
+* 1.01
+Bugfix: The RSS Elements weren't sorted by publish date
+

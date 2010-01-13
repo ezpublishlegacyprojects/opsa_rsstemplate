@@ -181,80 +181,78 @@ class opsaRSSExport extends eZRSSExport {
                     'status'        => $this->Status
                     );
         $rssSources = eZRSSExportItem::fetchFilteredList( $cond );
-        $nodesPerRSSItems = opsaRSSExportItem::fetchNodeList( $rssSources, $this->getObjectListFilter() );      
-        
-        foreach ( $nodesPerRSSItems as $nodesPerRSSItem ) {
-        	$rssItemID = $nodesPerRSSItem['RSSItem'];
-        	$nodeArray = $nodesPerRSSItem['Nodes'];
 
-	        if ( is_array( $nodeArray ) && count( $nodeArray ) )
-	        {
-	            $attributeMappings = eZRSSExportItem::getAttributeMappings( $rssSources );
-	
-	            foreach ( $nodeArray as $node )
-	            {
-	                $object = $node->attribute( 'object' );
-	                $dataMap = $object->dataMap();
-	                if ( $useURLAlias === true )
-	                {
-	                    $nodeURL = $this->urlEncodePath( $baseItemURL . $node->urlAlias() );
-	                }
-	                else
-	                {
-	                    $nodeURL = $baseItemURL . 'content/view/full/' . $node->attribute( 'node_id' );
-	                }
-	
-	                $rdfSeqLi = $doc->createElementNS( 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:li' );
-	                $rdfSeqLi->setAttributeNS( 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:resource', $nodeURL );
-	                $rdfSeq->appendChild( $rdfSeqLi );
-	
-	                // keep track if there's any match
-	                $doesMatch = false;
-	                // start mapping the class attribute to the respective RSS field
-	                foreach ( $attributeMappings as $attributeMapping )
-	                {
-	                    // search for correct mapping by path
-	                    if ( $attributeMapping[0]->attribute( 'class_id' ) == $object->attribute( 'contentclass_id' ) and
-	                         in_array( $attributeMapping[0]->attribute( 'source_node_id' ), $node->attribute( 'path_array' ) ) )
-	                    {
-	                        // found it
-	                        $doesMatch = true;
-	                        // now fetch the attributes
-	                        $title =  $dataMap[$attributeMapping[0]->attribute( 'title' )];
-	                        $description =  $dataMap[$attributeMapping[0]->attribute( 'description' )];
-	                        break;
-	                    }
-	                }
-	
-	                if( !$doesMatch )
-	                {
-	                    // no match
-	                    eZDebug::writeWarning( __METHOD__ . ': Cannot find matching RSS source node for content object in '.__FILE__.', Line '.__LINE__ );
-	                    $retValue = null;
-	                    return $retValue;
-	                }
-	
-					$itemTitleText = $this->getAttributeRSSContent( $title, $rssItemID, 'title' );					
-	                $itemTitle = $doc->createElement( 'title' );
-	                $itemTitle->appendChild( $doc->createTextNode( $itemTitleText ) );
-	
-					$itemDescriptionText = $this->getAttributeRSSContent( $description, $rssItemID, 'description' );	
-	                $itemDescription = $doc->createElement( 'description' );
-	                $itemDescription->appendChild( $doc->createTextNode( $itemDescriptionText ) );
-	
-	                $itemLink = $doc->createElement( 'link' );
-	                $itemLink->appendChild( $doc->createTextNode( $nodeURL ) );
-	
-	                $item = $doc->createElementNS( 'http://purl.org/rss/1.0/', 'item' );
-	                $item->setAttributeNS( 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:about', $nodeURL );
-	
-	                $item->appendChild( $itemTitle );
-	                $item->appendChild( $itemLink );
-	                $item->appendChild( $itemDescription );
-	
-	                $root->appendChild( $item );
-	            }
-	        }
+        $nodesPerRSSItem = opsaRSSExportItem::fetchNodeList( $rssSources, $this->getObjectListFilter() );      
+        if ( is_array( $nodesPerRSSItem ) && count( $nodesPerRSSItem ) )
+        {
+        	$attributeMappings = eZRSSExportItem::getAttributeMappings( $rssSources );
+
+            foreach ( $nodesPerRSSItem as $nodePerRSSItem )
+            {
+                $rssItemID = $nodePerRSSItem['RSSItem'];
+        		$node = $nodePerRSSItem['Node'];
+	                
+        		$object = $node->attribute( 'object' );
+                $dataMap = $object->dataMap();
+                if ( $useURLAlias === true )
+                {
+                    $nodeURL = $this->urlEncodePath( $baseItemURL . $node->urlAlias() );
+                }
+                else
+                {
+                    $nodeURL = $baseItemURL . 'content/view/full/' . $node->attribute( 'node_id' );
+                }
+
+                $rdfSeqLi = $doc->createElementNS( 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:li' );
+                $rdfSeqLi->setAttributeNS( 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:resource', $nodeURL );
+                $rdfSeq->appendChild( $rdfSeqLi );
+
+                // keep track if there's any match
+                $doesMatch = false;
+                // start mapping the class attribute to the respective RSS field
+                foreach ( $attributeMappings as $attributeMapping )
+                {
+                    // search for correct mapping by path
+                    if ( $attributeMapping[0]->attribute( 'class_id' ) == $object->attribute( 'contentclass_id' ) and
+                         in_array( $attributeMapping[0]->attribute( 'source_node_id' ), $node->attribute( 'path_array' ) ) )
+                    {
+                        // found it
+                        $doesMatch = true;
+                        // now fetch the attributes
+                        $title =  $dataMap[$attributeMapping[0]->attribute( 'title' )];
+                        $description =  $dataMap[$attributeMapping[0]->attribute( 'description' )];
+                        break;
+                    }
+                }
+
+                if( !$doesMatch )
+                {
+                    // no match
+                    eZDebug::writeWarning( __METHOD__ . ': Cannot find matching RSS source node for content object in '.__FILE__.', Line '.__LINE__ );
+                    $retValue = null;
+                    return $retValue;
+                }
+
+				$itemTitleText = $this->getAttributeRSSContent( $title, $rssItemID, 'title' );					
+                $itemTitle = $doc->createElement( 'title' );
+                $itemTitle->appendChild( $doc->createTextNode( $itemTitleText ) );
+
+				$itemDescriptionText = $this->getAttributeRSSContent( $description, $rssItemID, 'description' );	
+                $itemDescription = $doc->createElement( 'description' );
+                $itemDescription->appendChild( $doc->createTextNode( $itemDescriptionText ) );
+
+                $itemLink = $doc->createElement( 'link' );
+                $itemLink->appendChild( $doc->createTextNode( $nodeURL ) );
+
+                $item = $doc->createElementNS( 'http://purl.org/rss/1.0/', 'item' );
+                $item->setAttributeNS( 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:about', $nodeURL );
+
+                $item->appendChild( $itemTitle );
+                $item->appendChild( $itemLink );
+                $item->appendChild( $itemDescription );
+
+                $root->appendChild( $item );
+            }
         }
 
         return $doc;
@@ -351,110 +349,107 @@ class opsaRSSExport extends eZRSSExport {
                     );
         $rssSources = eZRSSExportItem::fetchFilteredList( $cond );
 
-        $nodesPerRSSItems = opsaRSSExportItem::fetchNodeList( $rssSources, $this->getObjectListFilter() );      
-        
-        foreach ( $nodesPerRSSItems as $nodesPerRSSItem ) {
-        	$rssItemID = $nodesPerRSSItem['RSSItem'];
-        	$nodeArray = $nodesPerRSSItem['Nodes'];
-        	
-	        if ( is_array( $nodeArray ) && count( $nodeArray ) )
-	        {
-	            $attributeMappings = eZRSSExportItem::getAttributeMappings( $rssSources );
-	
-	            foreach ( $nodeArray as $node )
-	            {
-	                $object = $node->attribute( 'object' );
-	                $dataMap = $object->dataMap();
-	                if ( $useURLAlias === true )
-	                {
-	                    $nodeURL = $this->urlEncodePath( $baseItemURL . $node->urlAlias() );
-	                }
-	                else
-	                {
-	                    $nodeURL = $baseItemURL . 'content/view/full/' . $node->attribute( 'node_id' );
-	                }
-	
-	                // keep track if there's any match
-	                $doesMatch = false;
-	                // start mapping the class attribute to the respective RSS field
-	                foreach ( $attributeMappings as $attributeMapping )
-	                {
-	                    // search for correct mapping by path
-	                    if ( $attributeMapping[0]->attribute( 'class_id' ) == $object->attribute( 'contentclass_id' ) and
-	                         in_array( $attributeMapping[0]->attribute( 'source_node_id' ), $node->attribute( 'path_array' ) ) )
-	                    {
-	                        // found it
-	                        $doesMatch = true;
-	                        // now fetch the attributes
-	                        $title =  $dataMap[$attributeMapping[0]->attribute( 'title' )];
-	                        $description =  $dataMap[$attributeMapping[0]->attribute( 'description' )];
-	                        // category is optional
-	                        $catAttributeIdentifier = $attributeMapping[0]->attribute( 'category' );
-	                        $category = $catAttributeIdentifier ? $dataMap[$catAttributeIdentifier] : false;
-	                        break;
-	                    }
-	                }
-	
-	                if( !$doesMatch )
-	                {
-	                    // no match
-	                    eZDebug::writeWarning( __METHOD__ . ': Cannot find matching RSS source node for content object in '.__FILE__.', Line '.__LINE__ );
-	                    $retValue = null;
-	                    return $retValue;
-	                }
-	
-	                $item = $doc->createElement( 'item' );
-					$itemTitleText = $this->getAttributeRSSContent( $title, $rssItemID, 'title' );					
-					
-	                $itemTitle = $doc->createElement( 'title' );
-	                $itemTitle->appendChild( $doc->createTextNode( $itemTitleText ) );
-	                $item->appendChild( $itemTitle );
-	
-	                $itemLink = $doc->createElement( 'link' );
-	                $itemLink->appendChild( $doc->createTextNode( $nodeURL ) );
-	                $item->appendChild( $itemLink );
-	
-	                $itemGuid = $doc->createElement( 'guid' );
-	                $itemGuid->appendChild( $doc->createTextNode( $nodeURL ) );
-	                $item->appendChild( $itemGuid );
-	
-					$itemDescriptionText = $this->getAttributeRSSContent( $description, $rssItemID, 'description' );					
-	                $itemDescription = $doc->createElement( 'description' );
-	                $itemDescription->appendChild( $doc->createTextNode( $itemDescriptionText ) );
-	                $item->appendChild( $itemDescription );
-	
-	                // category RSS element with respective class attribute content
-	                if ( $category )
-	                {
-	                    $categoryContent =  $category->attribute( 'content' );
-	                    if ( $categoryContent instanceof eZXMLText )
-	                    {
-	                        $outputHandler = $categoryContent->attribute( 'output' );
-	                        $itemCategoryText = $outputHandler->attribute( 'output_text' );
-	                    }
-	                    elseif ( $categoryContent instanceof eZKeyword )
-	                    {
-	                        $itemCategoryText = $categoryContent->keywordString();
-	                    }
-	                    else
-	                    {
-	                        $itemCategoryText = $categoryContent;
-	                    }
-	
-	                    $itemCategory = $doc->createElement( 'category' );
-	                    $itemCategory->appendChild( $doc->createTextNode( $itemCategoryText ) );
-	                    $item->appendChild( $itemCategory );
-	                }
-	
-	                $itemPubDate = $doc->createElement( 'pubDate' );
-	                $itemPubDate->appendChild( $doc->createTextNode( gmdate( 'D, d M Y H:i:s', $object->attribute( 'published' ) ) .' GMT' ) );
-	
-	                $item->appendChild( $itemPubDate );
-	
-	                $channel->appendChild( $item );
-	            }
-	        }
-    	}
+        $nodesPerRSSItem = opsaRSSExportItem::fetchNodeList( $rssSources, $this->getObjectListFilter() );      
+        if ( is_array( $nodesPerRSSItem ) && count( $nodesPerRSSItem ) )
+        {
+        	$attributeMappings = eZRSSExportItem::getAttributeMappings( $rssSources );
+
+            foreach ( $nodesPerRSSItem as $nodePerRSSItem )
+            {
+                $rssItemID = $nodePerRSSItem['RSSItem'];
+        		$node = $nodePerRSSItem['Node'];
+            	
+            	$object = $node->attribute( 'object' );
+                $dataMap = $object->dataMap();
+                if ( $useURLAlias === true )
+                {
+                    $nodeURL = $this->urlEncodePath( $baseItemURL . $node->urlAlias() );
+                }
+                else
+                {
+                    $nodeURL = $baseItemURL . 'content/view/full/' . $node->attribute( 'node_id' );
+                }
+
+                // keep track if there's any match
+                $doesMatch = false;
+                // start mapping the class attribute to the respective RSS field
+                foreach ( $attributeMappings as $attributeMapping )
+                {
+                    // search for correct mapping by path
+                    if ( $attributeMapping[0]->attribute( 'class_id' ) == $object->attribute( 'contentclass_id' ) and
+                         in_array( $attributeMapping[0]->attribute( 'source_node_id' ), $node->attribute( 'path_array' ) ) )
+                    {
+                        // found it
+                        $doesMatch = true;
+                        // now fetch the attributes
+                        $title =  $dataMap[$attributeMapping[0]->attribute( 'title' )];
+                        $description =  $dataMap[$attributeMapping[0]->attribute( 'description' )];
+                        // category is optional
+                        $catAttributeIdentifier = $attributeMapping[0]->attribute( 'category' );
+                        $category = $catAttributeIdentifier ? $dataMap[$catAttributeIdentifier] : false;
+                        break;
+                    }
+                }
+
+                if( !$doesMatch )
+                {
+                    // no match
+                    eZDebug::writeWarning( __METHOD__ . ': Cannot find matching RSS source node for content object in '.__FILE__.', Line '.__LINE__ );
+                    $retValue = null;
+                    return $retValue;
+                }
+
+                $item = $doc->createElement( 'item' );
+				$itemTitleText = $this->getAttributeRSSContent( $title, $rssItemID, 'title' );					
+				
+                $itemTitle = $doc->createElement( 'title' );
+                $itemTitle->appendChild( $doc->createTextNode( $itemTitleText ) );
+                $item->appendChild( $itemTitle );
+
+                $itemLink = $doc->createElement( 'link' );
+                $itemLink->appendChild( $doc->createTextNode( $nodeURL ) );
+                $item->appendChild( $itemLink );
+
+                $itemGuid = $doc->createElement( 'guid' );
+                $itemGuid->appendChild( $doc->createTextNode( $nodeURL ) );
+                $item->appendChild( $itemGuid );
+
+				$itemDescriptionText = $this->getAttributeRSSContent( $description, $rssItemID, 'description' );					
+                $itemDescription = $doc->createElement( 'description' );
+                $itemDescription->appendChild( $doc->createTextNode( $itemDescriptionText ) );
+                $item->appendChild( $itemDescription );
+
+                // category RSS element with respective class attribute content
+                if ( $category )
+                {
+                    $categoryContent =  $category->attribute( 'content' );
+                    if ( $categoryContent instanceof eZXMLText )
+                    {
+                        $outputHandler = $categoryContent->attribute( 'output' );
+                        $itemCategoryText = $outputHandler->attribute( 'output_text' );
+                    }
+                    elseif ( $categoryContent instanceof eZKeyword )
+                    {
+                        $itemCategoryText = $categoryContent->keywordString();
+                    }
+                    else
+                    {
+                        $itemCategoryText = $categoryContent;
+                    }
+
+                    $itemCategory = $doc->createElement( 'category' );
+                    $itemCategory->appendChild( $doc->createTextNode( $itemCategoryText ) );
+                    $item->appendChild( $itemCategory );
+                }
+
+                $itemPubDate = $doc->createElement( 'pubDate' );
+                $itemPubDate->appendChild( $doc->createTextNode( gmdate( 'D, d M Y H:i:s', $object->attribute( 'published' ) ) .' GMT' ) );
+
+                $item->appendChild( $itemPubDate );
+
+                $channel->appendChild( $item );
+            }
+        }
         return $doc;
     }	
 	
